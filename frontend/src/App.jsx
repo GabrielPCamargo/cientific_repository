@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Container, Typography, Card, CardContent } from "@mui/material";
+import Upload from "./Upload.jsx";
 
 function App() {
   const [msg, setMsg] = useState("");
@@ -8,7 +9,8 @@ function App() {
   useEffect(() => {
     axios.get("http://localhost:8000/")
       .then(res => {
-        setMsg(res.data.message)
+        setMsg(res.data.message);
+        console.log(import.meta.env.VITE_API_URL);
         console.log(res);
       })
       .catch(() => setMsg("Erro ao conectar com o backend."));
@@ -17,7 +19,7 @@ function App() {
   return (
     <Container sx={{ mt: 5 }}>
       <p>
-        Meu teste de aplicação fullstack com React, Material-UI, FastAPI e PostgreSQL.
+        Meu tes
       </p>
       <Card>
         <CardContent>
@@ -25,6 +27,7 @@ function App() {
             Portal de Produção Científica
           </Typography>
           <Typography>{msg}</Typography>
+          <Upload />
         </CardContent>
       </Card>
     </Container>

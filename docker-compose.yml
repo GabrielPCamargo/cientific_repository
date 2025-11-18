@@ -4,10 +4,8 @@ services:
   db:
     image: postgres:15
     container_name: db
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
-      POSTGRES_DB: portal
+    env_file:
+      - ./backend/.env      # usa .env para credenciais do banco
     ports:
       - "5432:5432"
     volumes:
@@ -16,22 +14,39 @@ services:
   backend:
     build: ./backend
     container_name: backend
+    env_file:
+      - ./backend/.env      # backend carrega TUDO daqui
     depends_on:
       - db
-    environment:
-      DATABASE_URL: postgresql://user:pass@db:5432/portal
+      - minio
     ports:
       - "8000:8000"
 
   frontend:
     build: ./frontend
     container_name: frontend
+    env_file:
+      - ./frontend/.env     # frontend também só usa .env
     depends_on:
       - backend
     ports:
       - "5173:5173"
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    command: server /data --console-address ":9001"
     environment:
-      VITE_API_URL: http://localhost:8000
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_SERVER_URL: http://localhost:9000
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
 
 volumes:
   postgres_data:
+  minio_data:
