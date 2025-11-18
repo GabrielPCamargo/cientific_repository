@@ -1,6 +1,6 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI # type: ignore
+from fastapi.middleware.cors import CORSMiddleware # type: ignore
+from fastapi import FastAPI, UploadFile, File # type: ignore
 from app.minio_client import client, BUCKET
 import uuid
 import os
