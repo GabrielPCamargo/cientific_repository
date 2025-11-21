@@ -1,11 +1,14 @@
-from fastapi import FastAPI # type: ignore
 from fastapi.middleware.cors import CORSMiddleware # type: ignore
-from fastapi import FastAPI, UploadFile, File # type: ignore
+from fastapi import FastAPI, UploadFile, File, Depends, HTTPException # type: ignore
 from app.minio_client import client, BUCKET
 import uuid
 import os
 import re
 import unicodedata
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.schemas.course import CourseCreate, CourseResponse
+from app.crud.course import create_course
 
 print("BUCKET =", os.getenv("MINIO_BUCKET"))
 
@@ -41,6 +44,18 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     return {"message": "API do Portal Científico está funcionando!"}
+
+@app.get('/documents')
+
+@app.post('/user')
+
+@app.post("/course", response_model=CourseResponse)
+def create_course_route(data: CourseCreate, db: Session = Depends(get_db)):
+    course = create_course(db, data)
+    if not course:
+        raise HTTPException(status_code=400, detail="Course already exists")
+    return course
+
 
 @app.post("/upload")
 async def upload(file: UploadFile = File(...)):

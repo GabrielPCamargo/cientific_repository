@@ -108,3 +108,37 @@ For error in backend related to bucket creation run
 ```bash
     ./init.sh
 ```
+
+## Migrations
+
+É necessário importar todos os modelos no alembic/.env
+
+Entrar no bash do container backend
+
+```bash
+    docker exec -it backend bash
+```
+
+Gerar migration com nome "create users table"
+
+```bash
+    alembic revision --autogenerate -m "create users table"
+```
+Atualizar banco de dados:
+
+```bash
+    alembic upgrade head
+```
+
+Para sair do exec do container:
+
+ctrl + d
+
+Para verificar o banco de dados:
+
+
+```bash
+    docker exec -it db bash
+    psql -U postgres -d mydb -c "\dt"
+```
+

@@ -5,3 +5,7 @@ sqlalchemy
 python-multipart
 minio
 python-dotenv
+alembic
+psycopg2-binary
+pydantic
+pydantic[email]
