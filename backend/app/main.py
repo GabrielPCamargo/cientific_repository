@@ -12,6 +12,10 @@ from app.crud.course import create_course
 
 from app.schemas.user import UserCreate, UserResponse
 from app.crud.user import create_user
+from app.core.auth import get_current_user
+from app.models.user import User
+from app.routes.auth import router as auth_router   # importa seu router
+
 
 print("BUCKET =", os.getenv("MINIO_BUCKET"))
 
@@ -44,6 +48,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# registra o router de login
+app.include_router(auth_router)
+
 @app.get("/")
 def read_root():
     return {"message": "API do Portal Científico está funcionando!"}
@@ -65,7 +73,7 @@ def create_user_route(data: UserCreate, db: Session = Depends(get_db)):
     return user
 
 @app.post("/upload")
-async def upload(file: UploadFile = File(...)):
+async def upload(file: UploadFile = File(...), user: User = Depends(get_current_user)):
     file_id = f"{uuid.uuid4()}-{slugify_filename(file.filename)}"
 
     client.put_object(

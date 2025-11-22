@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models.user import User
 from app.schemas.user import UserCreate
-from app.core.security import hash_password
+from app.core.security import hash_password, verify_password
 
 def create_user(db: Session, data: UserCreate):
     # verify if course already exists
@@ -19,3 +19,13 @@ def create_user(db: Session, data: UserCreate):
     db.commit()
     db.refresh(new_user)
     return new_user
+
+def authenticate_user(db: Session, email: str, password: str):
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        return None
+    
+    if not verify_password(password, user.password_hash):
+        return None
+    
+    return user
