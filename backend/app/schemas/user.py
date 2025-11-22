@@ -2,7 +2,7 @@ from pydantic import BaseModel, EmailStr
 
 class UserCreate(BaseModel):
     name: str
-    password_hash: str
+    password: str
     email: EmailStr
     course_id: int
     

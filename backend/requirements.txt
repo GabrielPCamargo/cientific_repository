@@ -9,3 +9,5 @@ alembic
 psycopg2-binary
 pydantic
 pydantic[email]
+passlib[bcrypt]
+bcrypt==3.2.2

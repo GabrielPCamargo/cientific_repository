@@ -10,6 +10,9 @@ from app.database import get_db
 from app.schemas.course import CourseCreate, CourseResponse
 from app.crud.course import create_course
 
+from app.schemas.user import UserCreate, UserResponse
+from app.crud.user import create_user
+
 print("BUCKET =", os.getenv("MINIO_BUCKET"))
 
 PUBLIC_URL = os.getenv("PUBLIC_MINIO_URL_REPOSITORY", "http://localhost:9000/cientific-repository")
@@ -47,8 +50,6 @@ def read_root():
 
 @app.get('/documents')
 
-@app.post('/user')
-
 @app.post("/course", response_model=CourseResponse)
 def create_course_route(data: CourseCreate, db: Session = Depends(get_db)):
     course = create_course(db, data)
@@ -56,6 +57,12 @@ def create_course_route(data: CourseCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Course already exists")
     return course
 
+@app.post("/user", response_model=UserResponse)
+def create_user_route(data: UserCreate, db: Session = Depends(get_db)):
+    user = create_user(db, data)
+    if not user:
+        raise HTTPException(status_code=400, detail="user already exists")
+    return user
 
 @app.post("/upload")
 async def upload(file: UploadFile = File(...)):
