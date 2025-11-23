@@ -8,14 +8,20 @@ import unicodedata
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.course import CourseCreate, CourseResponse
-from app.crud.course import create_course
+from app.crud.course import create_course, get_all_courses
 
 from app.schemas.user import UserCreate, UserResponse
 from app.crud.user import create_user
 from app.core.auth import get_current_user
 from app.models.user import User
 from app.routes.auth import router as auth_router   # importa seu router
+from app.routes.document import router as document_router   # importa seu router
 
+from app.schemas.event import EventCreate, EventResponse
+from app.crud.event import create_event, get_all_events
+
+
+import app.models 
 
 print("BUCKET =", os.getenv("MINIO_BUCKET"))
 
@@ -51,12 +57,24 @@ app.add_middleware(
 
 # registra o router de login
 app.include_router(auth_router)
+app.include_router(document_router)
 
 @app.get("/")
 def read_root():
     return {"message": "API do Portal Científico está funcionando!"}
 
-@app.get('/documents')
+@app.get("/event", response_model=list[EventResponse])
+def get_all_events_route(db: Session = Depends(get_db)):
+    events = get_all_events(db)
+    return events
+
+
+@app.post("/event", response_model=EventResponse)
+def create_course_route(data: EventCreate, db: Session = Depends(get_db)):
+    event = create_event(db, data)
+    if not event:
+        raise HTTPException(status_code=400, detail="Event already exists")
+    return event
 
 @app.post("/course", response_model=CourseResponse)
 def create_course_route(data: CourseCreate, db: Session = Depends(get_db)):
@@ -64,6 +82,11 @@ def create_course_route(data: CourseCreate, db: Session = Depends(get_db)):
     if not course:
         raise HTTPException(status_code=400, detail="Course already exists")
     return course
+
+@app.get("/course", response_model=list[CourseResponse])
+def get_all_courses_route(db: Session = Depends(get_db)):
+    courses = get_all_courses(db)
+    return courses
 
 @app.post("/user", response_model=UserResponse)
 def create_user_route(data: UserCreate, db: Session = Depends(get_db)):

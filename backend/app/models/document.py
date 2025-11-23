@@ -25,6 +25,8 @@ class Document(Base):
     advisor_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     advisor = relationship("User")
 
+    file_url = Column(String, nullable=False)
+
     # relationships
     authors = relationship("DocumentAuthor", cascade="all, delete-orphan")
     keywords = relationship("DocumentKeyword", cascade="all, delete-orphan")

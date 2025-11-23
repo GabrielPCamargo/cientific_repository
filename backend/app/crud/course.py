@@ -13,3 +13,6 @@ def create_course(db: Session, data: CourseCreate):
     db.commit()
     db.refresh(new_course)
     return new_course
+
+def get_all_courses(db: Session):
+    return db.query(Course).all()
