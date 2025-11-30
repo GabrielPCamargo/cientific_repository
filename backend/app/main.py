@@ -5,6 +5,7 @@ import uuid
 import os
 import re
 import unicodedata
+from datetime import timedelta
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.course import CourseCreate, CourseResponse
@@ -19,6 +20,9 @@ from app.routes.document import router as document_router   # importa seu router
 
 from app.schemas.event import EventCreate, EventResponse
 from app.crud.event import create_event, get_all_events
+
+from app.models.document_keyword import DocumentKeyword
+from app.schemas.keyword import KeywordResponse
 
 
 import app.models 
@@ -63,10 +67,21 @@ app.include_router(document_router)
 def read_root():
     return {"message": "API do Portal Científico está funcionando!"}
 
+@app.get("/me", response_model=UserResponse)
+def get_current_user_info(user: User = Depends(get_current_user)):
+    return user
+
 @app.get("/event", response_model=list[EventResponse])
 def get_all_events_route(db: Session = Depends(get_db)):
     events = get_all_events(db)
     return events
+
+
+@app.get("/keywords", response_model=list[KeywordResponse])
+def get_all_keywords(db: Session = Depends(get_db)):
+    """Retorna todas as palavras-chave únicas cadastradas"""
+    keywords = db.query(DocumentKeyword).distinct(DocumentKeyword.keyword).all()
+    return keywords
 
 
 @app.post("/event", response_model=EventResponse)

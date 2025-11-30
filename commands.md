@@ -140,5 +140,21 @@ Para verificar o banco de dados:
 ```bash
     docker exec -it db bash
     psql -U postgres -d mydb -c "\dt"
+    
 ```
+Para ver o conteúdo de uma tabela individual
+Isso mostrará as colunas id, name, email, tipos de dados (integer, varchar) e chaves primárias.
+
+```bash
+psql -U postgres -d mydb -c "\d users" 
+```
+
+Para ver tudo que tem na tabela users
+
+```bash
+psql -U postgres -d mydb -c "SELECT * FROM users;" 
+```
+
+
+
 
