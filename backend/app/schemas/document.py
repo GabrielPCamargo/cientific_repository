@@ -67,3 +67,20 @@ class DocumentResponse(BaseModel):
     class Config:
         orm_mode = True
 
+class AuthorUpdate(BaseModel):
+    name: str
+    email: Optional[str] = None
+
+class DocumentUpdate(BaseModel):
+    title: Optional[str] = None
+    abstract: Optional[str] = None
+    type: Optional[str] = None
+    field: Optional[str] = None
+    publish_year: Optional[int] = None
+    event_id: Optional[int] = None
+    course_id: Optional[int] = None
+    advisor_id: Optional[int] = None
+    file_url: Optional[str] = None
+
+    authors: Optional[List[AuthorUpdate]] = None
+    keywords: Optional[List[str]] = None

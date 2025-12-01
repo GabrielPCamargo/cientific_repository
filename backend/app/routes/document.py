@@ -7,12 +7,17 @@ from app.schemas.auth import LoginData, Token
 from app.database import get_db
 from app.core.auth import get_current_user
 from app.crud.user import authenticate_user
-from app.schemas.document import DocumentCreate
+from app.schemas.document import DocumentCreate, DocumentUpdate
 from app.models.user import User
 from app.models.document import Document
 from app.models.document_author import DocumentAuthor
 from app.models.document_keyword import DocumentKeyword
 from app.schemas.document import DocumentResponse
+
+from app.minio_client import client, BUCKET
+
+from app.main import get_public_url, slugify_filename
+from uuid import uuid4
 
 router = APIRouter()
 
@@ -139,3 +144,83 @@ def create_document(data: DocumentCreate, db: Session = Depends(get_db), user: U
     db.refresh(document)
 
     return document
+
+@router.put("/documents/{document_id}", response_model=DocumentResponse)
+def update_document(
+    document_id: int,
+    data: DocumentUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    document = db.query(Document).filter(Document.id == document_id).first()
+
+    if not document:
+        raise HTTPException(status_code=404, detail="Documento não encontrado")
+
+    # Se quiser obrigar que o advisor tenha permissão:
+    if document.advisor_id != user.id:
+        raise HTTPException(status_code=403, detail="Sem permissão para editar este documento")
+    
+    if(data.file_url != document.file_url):
+        try:
+            object_name = document.file_url.split("/", 4)[-1]
+
+            client.remove_object(BUCKET, object_name)
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Erro ao deletar arquivo no MinIO: {str(e)}")
+                
+
+    # Atualizar campos simples
+    for field, value in data.dict(exclude_unset=True, exclude={"authors", "keywords"}).items():
+        setattr(document, field, value)
+
+    # Atualizar autores (se enviado)
+    if data.authors is not None:
+        document.authors.clear()
+        for a in data.authors:
+            document.authors.append(
+                DocumentAuthor(name=a.name, email=a.email)
+            )
+
+    # Atualizar keywords (se enviado)
+    if data.keywords is not None:
+        document.keywords.clear()
+        for kw in data.keywords:
+            document.keywords.append(DocumentKeyword(keyword=kw))
+
+    db.commit()
+    db.refresh(document)
+
+    return document
+
+
+@router.delete("/documents/{document_id}")
+def delete_document(
+    document_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    document = db.query(Document).filter(Document.id == document_id).first()
+
+    if not document:
+        raise HTTPException(status_code=404, detail="Documento não encontrado")
+
+    # Validação opcional para permitir excluir só o advisor
+    if document.advisor_id != user.id:
+        raise HTTPException(status_code=403, detail="Sem permissão para excluir este documento")
+
+    try:
+        object_name = document.file_url.split("/", 4)[-1]
+
+        client.remove_object(BUCKET, object_name)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao deletar arquivo no MinIO: {str(e)}")
+
+
+    db.delete(document)
+    db.commit()
+
+    return {"message": "Documento excluído com sucesso"}
+
