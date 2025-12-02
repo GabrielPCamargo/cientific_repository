@@ -12,8 +12,13 @@ import {
     Divider,
     Grid,
     Card,
-    CardContent
+    CardContent,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    IconButton
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/esm/Close.js";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -23,6 +28,7 @@ export default function DocumentDetail() {
     const [document, setDocument] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
 
     // Buscar detalhes do documento
     useEffect(() => {
@@ -122,32 +128,92 @@ export default function DocumentDetail() {
                 <Divider sx={{ my: 3 }} />
 
                 {/* Botões de Ação */}
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                    {document.url && (
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    {document.file_url && (
                         <Button
                             variant="contained"
                             color="primary"
                             size="large"
-                            onClick={() => window.open(document.url, "_blank")}
+                            onClick={() => setPdfViewerOpen(true)}
+                            startIcon={<span>📖</span>}
                         >
-                            📥 Baixar Arquivo
+                            Ler
                         </Button>
                     )}
-                    {document.url && (
+                    {document.file_url && (
                         <Button
                             variant="contained"
-                            color="secondary"
+                            color="success"
                             size="large"
-                            onClick={() => window.open(document.url, "_blank")}
+                            component="a"
+                            href={document.file_url}
+                            download
+                            startIcon={<span>📥</span>}
                         >
-                            👁️ Visualizar
+                            Download
                         </Button>
                     )}
                 </Box>
             </Paper>
 
+            {/* Modal do Visualizador de PDF */}
+            <Dialog
+                open={pdfViewerOpen}
+                onClose={() => setPdfViewerOpen(false)}
+                maxWidth={false}
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        width: '95vw',
+                        height: '95vh',
+                        maxWidth: '95vw',
+                        maxHeight: '95vh',
+                        m: 1
+                    }
+                }}
+            >
+                <DialogTitle sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    borderBottom: 1,
+                    borderColor: 'divider',
+                    py: 1.5
+                }}>
+                    <Typography variant="h6" component="span" sx={{ 
+                        overflow: 'hidden', 
+                        textOverflow: 'ellipsis', 
+                        whiteSpace: 'nowrap',
+                        maxWidth: 'calc(100% - 50px)'
+                    }}>
+                        📖 {document.title}
+                    </Typography>
+                    <IconButton
+                        aria-label="fechar"
+                        onClick={() => setPdfViewerOpen(false)}
+                        sx={{ color: 'grey.500' }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column' }}>
+                    <Box sx={{ flexGrow: 1, width: '100%', height: '100%', minHeight: 0 }}>
+                        <iframe
+                            src={`${API_URL}/files/${document.file_url.split('/').slice(-1)[0]}#toolbar=1&navpanes=1&scrollbar=1`}
+                            title={document.title}
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                border: 'none',
+                                minHeight: 'calc(95vh - 80px)'
+                            }}
+                        />
+                    </Box>
+                </DialogContent>
+            </Dialog>
+
             {/* Informações Estruturadas */}
-            <Grid container spacing={3}>
+            <Grid container spacing={3} id="document-details">
                 {/* Coluna 1: Informações Gerais */}
                 <Grid item xs={12} md={6}>
                     <Card>
@@ -174,13 +240,29 @@ export default function DocumentDetail() {
                                 </Typography>
                             </Box>
 
-                            <Box>
+                            <Box sx={{ mb: 2 }}>
                                 <Typography variant="subtitle2" color="text.secondary">
                                     Ano de Publicação
                                 </Typography>
                                 <Typography variant="body1">
                                     {document.publish_year || "-"}
                                 </Typography>
+                            </Box>
+
+                            <Box>
+                                <Typography variant="subtitle2" color="text.secondary">
+                                    Orientador
+                                </Typography>
+                                <Typography variant="body1">
+                                    {document.advisor 
+                                        ? document.advisor.name 
+                                        : document.advisor_name || "-"}
+                                </Typography>
+                                {(document.advisor?.email || document.advisor_email) && (
+                                    <Typography variant="caption" color="text.secondary">
+                                        {document.advisor?.email || document.advisor_email}
+                                    </Typography>
+                                )}
                             </Box>
                         </CardContent>
                     </Card>

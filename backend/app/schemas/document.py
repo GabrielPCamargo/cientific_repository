@@ -21,7 +21,9 @@ class DocumentCreate(BaseModel):
     publish_year: int
     event_id: Optional[int] = None
     course_id: Optional[int] = None
-    advisor_id: int
+    advisor_id: Optional[int] = None  # ID do orientador se for usuário do sistema
+    advisor_name: Optional[str] = None  # Nome do orientador se não for usuário
+    advisor_email: Optional[str] = None  # Email do orientador se não for usuário
     file_url: str
 
     authors: List[AuthorCreate]
@@ -59,7 +61,9 @@ class DocumentResponse(BaseModel):
 
     event: Optional[EventResponse]
     course: Optional[CourseResponse]
-    advisor: UserResponse
+    advisor: Optional[UserResponse]
+    advisor_name: Optional[str]
+    advisor_email: Optional[str]
 
     authors: List[AuthorResponse]
     keywords: List[KeywordResponse]

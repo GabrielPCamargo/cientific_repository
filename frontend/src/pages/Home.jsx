@@ -207,7 +207,19 @@ export default function Home() {
                             placeholder="Buscar por título ou autor..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            sx={{ bgcolor: 'white', minWidth: 300 }}
+                            sx={{ 
+                                minWidth: 300,
+                                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'grey.800' : 'white',
+                                '& .MuiOutlinedInput-root': {
+                                    '& input': {
+                                        color: (theme) => theme.palette.text.primary,
+                                    },
+                                    '& input::placeholder': {
+                                        color: (theme) => theme.palette.text.secondary,
+                                        opacity: 1,
+                                    },
+                                },
+                            }}
                         />
                     </Box>
 

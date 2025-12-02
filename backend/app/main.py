@@ -1,11 +1,10 @@
 from fastapi.middleware.cors import CORSMiddleware # type: ignore
 from fastapi import FastAPI, UploadFile, File, Depends, HTTPException # type: ignore
+from fastapi.responses import StreamingResponse
 from app.minio_client import client, BUCKET
 import uuid
 import os
-import re
-import unicodedata
-from datetime import timedelta
+import io
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.course import CourseCreate, CourseResponse
@@ -24,28 +23,11 @@ from app.crud.event import create_event, get_all_events
 from app.models.document_keyword import DocumentKeyword
 from app.schemas.keyword import KeywordResponse
 
+from app.utils import get_public_url, slugify_filename
 
 import app.models 
 
 print("BUCKET =", os.getenv("MINIO_BUCKET"))
-
-PUBLIC_URL = os.getenv("PUBLIC_MINIO_URL_REPOSITORY", "http://localhost:9000/cientific-repository")
-
-def get_public_url(object_name: str) -> str:
-    return f"{PUBLIC_URL.rstrip('/')}/{object_name}"
-
-def slugify_filename(filename: str) -> str:
-    # 1. Normaliza para ASCII (remove acentos: ç -> c, é -> e)
-    filename = unicodedata.normalize('NFKD', filename).encode('ascii', 'ignore').decode('ascii')
-    
-    # 2. Remove tudo que NÃO for letra, número, ponto ou hífen
-    # (Isso evita ataques de diretório como ../)
-    filename = re.sub(r'[^\w\s.-]', '', filename)
-    
-    # 3. Troca espaços (e underscores se quiser) por hifens
-    filename = re.sub(r'[-\s]+', '-', filename).strip('-_')
-    
-    return filename.lower() # Opcional: deixa tudo minúsculo
 
 app = FastAPI(title="Portal de Produção Científica")
 
@@ -114,12 +96,16 @@ def create_user_route(data: UserCreate, db: Session = Depends(get_db)):
 async def upload(file: UploadFile = File(...), user: User = Depends(get_current_user)):
     file_id = f"{uuid.uuid4()}-{slugify_filename(file.filename)}"
 
+    # Determinar o content_type correto
+    content_type = file.content_type or "application/octet-stream"
+    
     client.put_object(
         BUCKET,
         file_id,
         file.file,
         length=-1,
         part_size=10 * 1024 * 1024,
+        content_type=content_type,
     )
 
     #internal_url = client.presigned_get_object(BUCKET, file_id)
@@ -130,4 +116,34 @@ async def upload(file: UploadFile = File(...), user: User = Depends(get_current_
         "id": file_id,
         "url": get_public_url(file_id),
     }
+
+
+@app.get("/files/{file_id:path}")
+async def serve_file(file_id: str):
+    """Serve arquivos do MinIO com headers corretos para visualização no navegador"""
+    try:
+        response = client.get_object(BUCKET, file_id)
+        data = response.read()
+        response.close()
+        response.release_conn()
+        
+        # Determinar content-type baseado na extensão
+        content_type = "application/octet-stream"
+        if file_id.lower().endswith(".pdf"):
+            content_type = "application/pdf"
+        elif file_id.lower().endswith((".jpg", ".jpeg")):
+            content_type = "image/jpeg"
+        elif file_id.lower().endswith(".png"):
+            content_type = "image/png"
+        
+        return StreamingResponse(
+            io.BytesIO(data),
+            media_type=content_type,
+            headers={
+                "Content-Disposition": f"inline; filename={file_id.split('/')[-1]}",
+                "Cache-Control": "public, max-age=3600"
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Arquivo não encontrado: {str(e)}")
 

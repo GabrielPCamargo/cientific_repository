@@ -15,8 +15,6 @@ from app.models.document_keyword import DocumentKeyword
 from app.schemas.document import DocumentResponse
 
 from app.minio_client import client, BUCKET
-
-from app.main import get_public_url, slugify_filename
 from uuid import uuid4
 
 router = APIRouter()
@@ -120,8 +118,10 @@ def create_document(data: DocumentCreate, db: Session = Depends(get_db), user: U
         publish_year=data.publish_year,
         event_id=data.event_id,
         course_id=data.course_id,
-        advisor_id=data.advisor_id,
-         file_url=data.file_url,
+        advisor_id=data.advisor_id,  # Pode ser None se orientador for externo
+        advisor_name=data.advisor_name,  # Nome do orientador externo
+        advisor_email=data.advisor_email,  # Email do orientador externo
+        file_url=data.file_url,
     )
 
     # Criar DocumentAuthor

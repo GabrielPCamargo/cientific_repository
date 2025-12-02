@@ -20,7 +20,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  IconButton,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/esm/Close.js";
 
 export default function MyPublications() {
   const [documents, setDocuments] = useState([]);
@@ -396,42 +398,62 @@ export default function MyPublications() {
         </DialogActions>
       </Dialog>
 
-      {/* MODAL: Visualizar Arquivo */}
-      <Dialog open={showViewer} onClose={handleCloseViewer} maxWidth="lg" fullWidth sx={{ "& .MuiDialog-paper": { height: "90vh" } }}>
-        <DialogTitle sx={{ fontWeight: "bold", fontSize: "1.2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span>📖 {viewingDocument?.title}</span>
+      {/* MODAL: Visualizador de PDF */}
+      <Dialog
+        open={showViewer}
+        onClose={handleCloseViewer}
+        maxWidth={false}
+        fullWidth
+        PaperProps={{
+          sx: {
+            width: '95vw',
+            height: '95vh',
+            maxWidth: '95vw',
+            maxHeight: '95vh',
+            m: 1
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          borderBottom: 1,
+          borderColor: 'divider',
+          py: 1.5
+        }}>
+          <Typography variant="h6" component="span" sx={{ 
+            overflow: 'hidden', 
+            textOverflow: 'ellipsis', 
+            whiteSpace: 'nowrap',
+            maxWidth: 'calc(100% - 50px)'
+          }}>
+            📖 {viewingDocument?.title}
+          </Typography>
+          <IconButton
+            aria-label="fechar"
+            onClick={handleCloseViewer}
+            sx={{ color: 'grey.500' }}
+          >
+            <CloseIcon />
+          </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ p: 2, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          <Box sx={{ flex: 1, overflow: "auto", bgcolor: (theme) => theme.palette.background.paper, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 2 }}>
-            <Typography variant="body1" sx={{ textAlign: "center" }}>
-              Abra o arquivo em uma nova aba para visualização completa:
-            </Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              size="large"
-              onClick={() => {
-                window.open(viewingDocument?.url, "_blank");
-              }}
-            >
-              🔗 Abrir em Nova Aba
-            </Button>
-            <Typography variant="caption" color="textSecondary" sx={{ textAlign: "center", mt: 2 }}>
-              O arquivo será aberto diretamente do servidor MinIO
-            </Typography>
+        <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ flexGrow: 1, width: '100%', height: '100%', minHeight: 0 }}>
+            {viewingDocument?.url && (
+              <iframe
+                src={`${apiUrl}/files/${viewingDocument.url.split('/').slice(-1)[0]}#toolbar=1&navpanes=1&scrollbar=1`}
+                title={viewingDocument?.title}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                  minHeight: 'calc(95vh - 80px)'
+                }}
+              />
+            )}
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 2, gap: 1 }}>
-          <Button
-            variant="contained"
-            onClick={() => handleDownload(viewingDocument?.url)}
-          >
-            ⬇️ Download
-          </Button>
-          <Button variant="outlined" onClick={handleCloseViewer}>
-            Fechar
-          </Button>
-        </DialogActions>
       </Dialog>
     </Box>
   );

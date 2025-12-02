@@ -50,6 +50,11 @@ export default function Upload() {
   const [showNewEvent, setShowNewEvent] = useState(false);
   const [loadingEvents, setLoadingEvents] = useState(false);
 
+  // Orientador
+  const [isAdvisor, setIsAdvisor] = useState(true); // true = "Eu sou o orientador"
+  const [advisorName, setAdvisorName] = useState("");
+  const [advisorEmail, setAdvisorEmail] = useState("");
+
   // Autores
   const [authors, setAuthors] = useState([
     { name: "", email: "" }
@@ -63,6 +68,7 @@ export default function Upload() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentUserName, setCurrentUserName] = useState("");
   const [showReuseDialog, setShowReuseDialog] = useState(false);
 
   // Ref para o input de arquivo
@@ -96,6 +102,7 @@ export default function Upload() {
       if (res.ok) {
         const user = await res.json();
         setCurrentUserId(user.id);
+        setCurrentUserName(user.name || user.email);
       }
     } catch (err) {
       console.error("Erro ao buscar usuário atual:", err);
@@ -313,6 +320,11 @@ export default function Upload() {
       setError("Selecione ou crie um curso");
       return;
     }
+    // Validar orientador
+    if (!isAdvisor && !advisorName.trim()) {
+      setError("Informe o nome do orientador");
+      return;
+    }
 
     setUploading(true);
 
@@ -334,7 +346,11 @@ export default function Upload() {
         file_url: fileUrl,
         course_id: selectedCourse ? parseInt(selectedCourse) : null,
         event_id: selectedEvent ? parseInt(selectedEvent) : null,
-        advisor_id: currentUserId || 1, // Usar ID do usuário logado
+        // Orientador: se "Eu sou o orientador", usa o ID do usuário logado
+        // Caso contrário, usa os dados informados manualmente
+        advisor_id: isAdvisor ? currentUserId : null,
+        advisor_name: isAdvisor ? null : advisorName,
+        advisor_email: isAdvisor ? null : (advisorEmail || null),
         authors: authors
           .filter(a => a.name.trim())
           .map(a => ({
@@ -705,9 +721,66 @@ export default function Upload() {
 
           <Divider sx={{ my: 3 }} />
 
+          {/* ORIENTADOR */}
+          <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+            5. Orientador
+          </Typography>
+          <Box sx={{ mb: 2 }}>
+            <FormControl component="fieldset">
+              <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                <Button
+                  variant={isAdvisor ? "contained" : "outlined"}
+                  onClick={() => setIsAdvisor(true)}
+                  sx={{ minWidth: 180 }}
+                >
+                  👤 Eu sou o Orientador
+                </Button>
+                <Button
+                  variant={!isAdvisor ? "contained" : "outlined"}
+                  onClick={() => setIsAdvisor(false)}
+                  sx={{ minWidth: 180 }}
+                >
+                  ✏️ Informar Orientador
+                </Button>
+              </Box>
+            </FormControl>
+          </Box>
+
+          {isAdvisor ? (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              O documento será registrado com você (<strong>{currentUserName || email}</strong>) como orientador.
+            </Alert>
+          ) : (
+            <Box sx={{ p: 2, bgcolor: (theme) => theme.palette.background.paper, borderRadius: 1 }}>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                Informações do Orientador:
+              </Typography>
+              <TextField
+                fullWidth
+                size="small"
+                label="Nome do Orientador *"
+                value={advisorName}
+                onChange={(e) => setAdvisorName(e.target.value)}
+                margin="normal"
+                required
+              />
+              <TextField
+                fullWidth
+                size="small"
+                label="Email do Orientador (opcional)"
+                value={advisorEmail}
+                onChange={(e) => setAdvisorEmail(e.target.value)}
+                margin="normal"
+                type="email"
+              />
+            </Box>
+          )}
+
+          <Divider sx={{ my: 3 }} />
+
           {/* AUTORES */}
           <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
-            5. Autores
+            6. Autores
           </Typography>
           {authors.map((author, index) => (
             <Box key={index} sx={{ p: 2, mb: 2, bgcolor: (theme) => theme.palette.background.paper, borderRadius: 1 }}>
@@ -747,7 +820,7 @@ export default function Upload() {
 
           {/* KEYWORDS */}
           <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
-            6. Palavras-Chave
+            7. Palavras-Chave
           </Typography>
           <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
             <TextField

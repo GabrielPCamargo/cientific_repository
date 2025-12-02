@@ -22,9 +22,12 @@ class Document(Base):
     course_id = Column(Integer, ForeignKey("courses.id"), nullable=True)
     course = relationship("Course")
 
-    advisor_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    # Orientador - pode ser um usuário do sistema OU informado manualmente
+    advisor_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     advisor = relationship("User")
-
+    advisor_name = Column(String, nullable=True)  # Nome do orientador quando não é usuário do sistema
+    advisor_email = Column(String, nullable=True)  # Email do orientador quando não é usuário do sistema
+    
     file_url = Column(String, nullable=False)
 
     # relationships
