@@ -183,7 +183,7 @@ export default function Home() {
         });
     }, [selectedTypes, selectedYears, selectedFields, selectedEvents, searchTerm, selectedKeywords]);
 
-    // Função auxiliar para extrair primeira autora
+    // Função auxiliar para extrair primeiro autor
     const getFirstAuthor = (doc) => {
         if (doc.authors && doc.authors.length > 0) {
             return doc.authors[0].name;

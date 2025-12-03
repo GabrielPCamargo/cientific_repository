@@ -1,23 +1,50 @@
+// ============================================================
+// IMPORTS - Bibliotecas externas
+// ============================================================
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { CssBaseline, useMediaQuery } from "@mui/material";
+
+// ============================================================
+// IMPORTS - Componentes internos
+// ============================================================
 import Layout from "./components/Layout.jsx";
+
+// ============================================================
+// IMPORTS - Páginas
+// ============================================================
 import Home from "./pages/Home.jsx";
 import MyPublications from "./pages/MyPublications.jsx";
 import DocumentDetail from "./pages/DocumentDetail.jsx";
 import Favorites from "./pages/Favorites.jsx";
 import SobreORCU from "./pages/SobreORCU.jsx";
-import Upload from "./pages/Upload.jsx"; // moved into pages/
-import { FavoritesProvider } from "./contexts/FavoritesContext.jsx";
+import Upload from "./pages/Upload.jsx";
 import Settings from "./pages/Settings.jsx";
 
-// Crie um componente dummy para testar a navegação
+// ============================================================
+// IMPORTS - Contextos
+// ============================================================
+import { FavoritesProvider } from "./contexts/FavoritesContext.jsx";
+
+// ============================================================
+// CONSTANTES
+// ============================================================
+const LS_KEY = "rcu_preferences";
+
+// ============================================================
+// COMPONENTES AUXILIARES (Placeholders)
+// ============================================================
 const Dashboard = () => <h1>Bem-vindo ao Dashboard (Em construção)</h1>;
 const NotFound = () => <h1>Página não encontrada</h1>;
 
+// ============================================================
+// COMPONENTE PRINCIPAL
+// ============================================================
 function App() {
-  const LS_KEY = "rcu_preferences";
+  // ----------------------------------------------------------
+  // ESTADO: Preferência de tema (dark/light/system)
+  // ----------------------------------------------------------
   const [themeChoice, setThemeChoice] = useState(() => {
     try {
       const raw = localStorage.getItem(LS_KEY);
@@ -29,12 +56,18 @@ function App() {
     }
   });
 
-  // detecta preferência do sistema
+  // ----------------------------------------------------------
+  // VALORES DERIVADOS: Detecção de tema e modo de paleta
+  // ----------------------------------------------------------
+  // Detecta preferência do sistema operacional
   const prefersDark = useMediaQuery("(prefers-color-scheme: dark)");
 
-  // recalcula palette mode com base na escolha
+  // Calcula o modo da paleta com base na escolha do usuário
   const paletteMode = themeChoice === "system" ? (prefersDark ? "dark" : "light") : themeChoice;
 
+  // ----------------------------------------------------------
+  // MEMO: Configuração do tema MUI
+  // ----------------------------------------------------------
   const theme = useMemo(() => createTheme({
     palette: {
       mode: paletteMode,
@@ -45,7 +78,7 @@ function App() {
         main: '#2e7d32'
       },
     },
-    components: {
+    components: {                                               
       MuiPaper: {
         styleOverrides: {
           root: {
@@ -60,8 +93,8 @@ function App() {
           }
         }
       },
-      MuiChip: {
-        styleOverrides: {
+      MuiChip: {                                       
+        styleOverrides: {                                                                                                 
           root: {
             marginRight: 8
           }
@@ -70,7 +103,9 @@ function App() {
     }
   }), [paletteMode]);
 
-  // atualiza quando outra aba/gravação mudar localStorage
+  // ----------------------------------------------------------
+  // EFEITO: Sincroniza tema entre abas (storage event)
+  // ----------------------------------------------------------
   useEffect(() => {
     const handler = (e) => {
       if (e.key === LS_KEY) {
@@ -86,7 +121,10 @@ function App() {
     return () => window.removeEventListener("storage", handler);
   }, []);
 
-  // observa mudanças locais (Settings grava direto no localStorage). Recarrega preferência periodicamente.
+  // ----------------------------------------------------------
+  // EFEITO: Polling para mudanças locais (mesma aba)
+  // Necessário pois Settings grava direto no localStorage
+  // ----------------------------------------------------------
   useEffect(() => {
     const id = setInterval(() => {
       try {
@@ -102,33 +140,37 @@ function App() {
     return () => clearInterval(id);
   }, [themeChoice]);
 
+  // ----------------------------------------------------------
+  // RENDER: Estrutura da aplicação
+  // ----------------------------------------------------------
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <FavoritesProvider>
       <BrowserRouter>
       <Routes>
-        {/* A rota pai é o Layout. 
-           Todas as rotas "filhas" serão renderizadas dentro do <Outlet /> do Layout 
-        */}
+        {/* Rota pai: Layout com sidebar e header */}
         <Route path="/" element={<Layout />}>
           
-          {/* index significa: quando a rota for exatamente "/" */}
+          {/* Página inicial (lista de artigos) */}
           <Route index element={<Home />} />
           
-          <Route path="dashboard" element={<Dashboard />} />
-          
-          <Route path="minhas-publicacoes" element={<MyPublications />} />
-          
+          {/* Páginas de conteúdo */}
+          <Route path="sobre-o-rcu" element={<SobreORCU />} />
           <Route path="documento/:id" element={<DocumentDetail />} />
           
+          {/* Páginas do usuário */}
+          <Route path="minhas-publicacoes" element={<MyPublications />} />
           <Route path="favoritos" element={<Favorites />} />
-          <Route path="sobre-o-rcu" element={<SobreORCU />} />
-          <Route path="configuracoes" element={<Settings />} />
-          
-          {/* Exemplo de como reutilizar seu componente antigo */}
           <Route path="upload" element={<Upload />} />
           
+          {/* Configurações */}
+          <Route path="configuracoes" element={<Settings />} />
+          
+          {/* Placeholder - em construção */}
+          <Route path="dashboard" element={<Dashboard />} />
+          
+          {/* Fallback 404 */}
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

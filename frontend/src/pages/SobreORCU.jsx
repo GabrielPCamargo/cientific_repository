@@ -9,10 +9,11 @@ export default function SobreORCU() {
       <Paper sx={{ p: 3, mb: 2 }}>
         <Typography variant="h6">O que é o RCU?</Typography>
         <Typography sx={{ mt: 1 }}>
-          O RCU (Repositório Científico Universitário) é um portal leve para publicação,
-          descoberta e gestão de trabalhos científicos. O objetivo é facilitar o depósito
-          de documentos, a busca por palavras-chave, e a construção de uma vitrine de
-          pesquisas para pesquisadores e instituições.
+          O RCU (Repositório Científico da UERGS) é um portal leve para publicação,
+          descoberta e gestão de produções acadêmicas no âmbito da UERGS. O objetivo é facilitar o depósito e a divulgação
+          para a comunidade, de documentos científicos, como artigos, teses, trabalhos de conclusão de curso, trabalhos de eventos,
+          entre outros produzidos pelos professores e alunos. Assim promovendo e incentivando a produção científica na universidade.
+      
         </Typography>
       </Paper>
 
@@ -39,7 +40,7 @@ export default function SobreORCU() {
         <Typography sx={{ mt: 1 }}>
           Este projeto foi desenvolvido como um repositório universitário simples. Para
           feedback, problemas ou contribuições, abra uma issue no repositório ou envie um
-          e-mail para a equipe responsável.
+          e-mail para a equipe responsável em <strong>joao-costa01@uergs.edu.br</strong> e <strong>gabriel-camargo01@uergs.edu.br</strong>
         </Typography>
 
         <Divider sx={{ my: 2 }} />
@@ -47,7 +48,8 @@ export default function SobreORCU() {
         <Typography variant="body2">Links úteis:</Typography>
         <List>
           <ListItem>
-            <Link href="#" underline="hover">Repositório do projeto (local)</Link>
+            <Link href="https://github.com/GabrielPCamargo/cientific_repository" underline="hover" target="_blank" 
+  rel="noopener noreferrer">Repositório do projeto (local)</Link>
           </ListItem>
         </List>
       </Paper>
